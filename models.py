@@ -8,7 +8,7 @@ from resnet import resnet18, resnet152
 from wideresnet import WideResNet28, WideResNet34
 from resnet50 import ResNet50
 import torch.nn.init as init
-
+from math import sqrt
 class Generator(nn.Module):
     """ LeNets++ architecture from: "A Discriminative Feature Learning Approach for Deep Face Recognition"
         The variant is used by PCL, i.e. no max pooling and no padding.
@@ -131,10 +131,10 @@ class ResNet18_StochasticBaseDiagonal(nn.Module):
             #x =15*f.normalize(x, p=2, dim=1) 
             # * self.radius1
             x = x + x_sample
-            self.radius1 = x.norm(p=2, dim=1, keepdim=True)  
+            #self.radius1 = x.norm(p=2, dim=1, keepdim=True)  
             
 
-            x =f.normalize(x, p=2, dim=1)* self.radius1
+            x =f.normalize(x, p=2, dim=1)#* self.radius1
         return x
 
 
@@ -239,12 +239,12 @@ class WCANet_ResNet18(WCANet_Base):
         std = torch.clamp(f.softplus(self.sigma2), min=1e-4, max=1.0)
         dist2=Normal(0,std)
         dist2_sample = dist2.rsample()
-        noise_weight=self.weight+0.001*dist2_sample
+        noise_weight=self.weight+0.1*dist2_sample
                      # +0.001*dist2_sample
         # print('a',self.weight)
         # print('b',dist2_sample)
-        self.radius2 = noise_weight.norm(p=2, dim=1, keepdim=True)  
-        fc2_w = f.normalize(noise_weight, p=2, dim=1) * self.radius2
+       # self.radius2 = noise_weight.norm(p=2, dim=1, keepdim=True)
+        fc2_w = f.normalize(noise_weight, p=2, dim=1) #* self.radius2
 
         #fc2_w = f.normalize(noise_weight, p=2, dim=1)
         classifier = [fc2_w, self.b2]
